@@ -19,16 +19,17 @@ namespace Celebrities.Controllers
     {
         private readonly CelebritiesDbContext _celebritiesDbContext;
         private readonly FaceRecognitionServiceClient _faceRecognitionServiceClient;
-        private readonly CelebrityBuilder _celebrityBuilder = new CelebrityBuilder();
+        private readonly CelebrityBuilder _celebrityBuilder;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             CelebritiesDbContext celebritiesDbContext,
-            FaceRecognitionServiceClient faceRecognitionServiceClient, 
-            ILogger<AdminController> logger)
+            FaceRecognitionServiceClient faceRecognitionServiceClient,
+            ILogger<AdminController> logger, CelebrityBuilder celebrityBuilder)
         {
             _celebritiesDbContext = celebritiesDbContext;
             _faceRecognitionServiceClient = faceRecognitionServiceClient;
+            _celebrityBuilder = celebrityBuilder;
             _logger = logger;
         }
 
@@ -54,6 +55,9 @@ namespace Celebrities.Controllers
         public async Task<ActionResult<Celebrity>> AddCelebrity([FromForm] CelebrityViewModel celebrityViewModel)
         {
             var celebrityDbModel = await _celebrityBuilder.BuildDbModelAsync(celebrityViewModel);
+            celebrityDbModel.FaceRecognitionName = celebrityViewModel.Name;
+            celebrityDbModel.Trained = false;
+
             await _celebritiesDbContext.AddAsync(celebrityDbModel);
             await _celebritiesDbContext.SaveChangesAsync();
 
@@ -63,6 +67,11 @@ namespace Celebrities.Controllers
         [HttpPost("{id}")]
         public async Task<ActionResult> AddCelebrityExample(int id, IFormFile image)
         {
+            if (image == null)
+            {
+                return BadRequest();
+            }
+
             var celebrity = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == id);
             if (celebrity == null)
             {
@@ -73,9 +82,8 @@ namespace Celebrities.Controllers
             await image.CopyToAsync(memoryStream);
 
             var faceRecognitionResponse = await _faceRecognitionServiceClient.AddFaceExample(memoryStream.ToArray(), image.FileName,
-                    celebrity.Name);
+                    celebrity.FaceRecognitionName);
 
-            //TODO [Julia] Think about uploading several faces one more image
             if (!faceRecognitionResponse.IsSuccessStatusCode)
             {
                 return BadRequest();
@@ -89,6 +97,54 @@ namespace Celebrities.Controllers
             }
 
             return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Celebrity>> DeleteCelebrity(int id)
+        {
+            var celebrity = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == id);
+            if (celebrity == null)
+            {
+                return NotFound();
+            }
+
+            if(celebrity.Trained) {
+                var response = await _faceRecognitionServiceClient.DeleteFaceExample(celebrity.FaceRecognitionName);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return BadRequest();
+                }
+            }
+
+            _celebritiesDbContext.Celebrities.Remove(celebrity);
+            await _celebritiesDbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        //Don't check this, it doesn't work :) Need to figure out what's wrong and fix
+        [HttpPut("id")]
+        public async Task<ActionResult<Celebrity>> EditCelebrity([FromForm]CelebrityViewModel celebrityViewModel, int id)
+        {
+            if (celebrityViewModel == null)
+            {
+                return BadRequest();
+            }
+
+            var celebrity = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == celebrityViewModel.Id);
+            if (celebrity == null)
+            {
+                return NotFound();
+            }
+
+            var celebrityDb = await _celebrityBuilder.BuildDbModelAsync(celebrityViewModel);
+            celebrityDb.FaceRecognitionName = celebrity.FaceRecognitionName;
+            celebrityDb.Trained = celebrity.Trained;
+
+            _celebritiesDbContext.Celebrities.Update(celebrityDb);
+            await _celebritiesDbContext.SaveChangesAsync();
+
+            return Ok(celebrityViewModel);
         }
     }
 }

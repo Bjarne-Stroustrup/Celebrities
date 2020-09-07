@@ -26,7 +26,7 @@ namespace Celebrities.FaceRecognitionService
         public async Task<HttpResponseMessage> AddFaceExample(byte[] image, string fileName, string faceName)
         {
             var relativeEndpoint =
-                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:AddFaceRelativeEndpoint").Value}/{faceName}";
+                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}/{faceName}";
             using var content = new MultipartFormDataContent {{new ByteArrayContent(image), ContentName, fileName}};
 
             var response = await _httpClient.PostAsync(relativeEndpoint, content);
@@ -51,6 +51,15 @@ namespace Celebrities.FaceRecognitionService
             result.IsSuccessful = true;
 
             return result;
+        }
+
+        public async Task<HttpResponseMessage> DeleteFaceExample(string faceName)
+        {
+            var relativeEndpoint =
+                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}/{faceName}";
+
+            var response = await _httpClient.DeleteAsync(relativeEndpoint);
+            return response;
         }
     }
 }

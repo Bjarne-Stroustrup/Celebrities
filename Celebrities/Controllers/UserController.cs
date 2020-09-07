@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Celebrities.Builders;
 using Celebrities.Database;
-using Celebrities.Database.Models;
 using Celebrities.FaceRecognitionService;
+using Celebrities.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,22 +19,28 @@ namespace Celebrities.Controllers
     {
         private readonly CelebritiesDbContext _celebritiesDbContext;
         private readonly FaceRecognitionServiceClient _faceRecognitionServiceClient;
+        private readonly CelebrityBuilder _celebrityBuilder;
         private readonly ILogger<UserController> _logger;
 
         public UserController(
             CelebritiesDbContext celebritiesDbContext,
-            FaceRecognitionServiceClient faceRecognitionServiceClient,
+            FaceRecognitionServiceClient faceRecognitionServiceClient, CelebrityBuilder celebrityBuilder,
             ILogger<UserController> logger)
         {
             _celebritiesDbContext = celebritiesDbContext;
             _faceRecognitionServiceClient = faceRecognitionServiceClient;
+            _celebrityBuilder = celebrityBuilder;
             _logger = logger;
         }
 
-
         [HttpPost]
-        public async Task<ActionResult<IEnumerable<Celebrity>>> RecognizeFace(IFormFile image)
+        public async Task<ActionResult<IEnumerable<SimilarCelebrityViewModel>>> RecognizeFace(IFormFile image)
         {
+            if (image == null)
+            {
+                return BadRequest();
+            }
+
             await using var memoryStream = new MemoryStream();
             await image.CopyToAsync(memoryStream);
 
@@ -44,11 +50,13 @@ namespace Celebrities.Controllers
                 return BadRequest();
             }
 
-            //TODO [Julia] Think about recognizing several faces on the image
-            var similarFaceNames = facesRecognitionResult.Results.First().Faces.Select(f => f.FaceName).ToArray();
+            var similarFaces = facesRecognitionResult.Results.First().Faces.ToArray();
+            var similarFaceNames = similarFaces.Select(f => f.FaceName).ToArray();
             var similarCelebrities = await _celebritiesDbContext.Celebrities.Where(c => similarFaceNames.Contains(c.Name))
                 .ToArrayAsync();
-            return similarCelebrities;
+
+            var viewModels = _celebrityBuilder.BuildSimilarCelebrityViewModels(similarFaces, similarCelebrities).ToArray();
+            return viewModels;
         }
     }
 }

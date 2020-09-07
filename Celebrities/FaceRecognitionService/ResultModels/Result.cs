@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 
 namespace Celebrities.FaceRecognitionService.ResultModels
 {
-    //TODO [Julia] Add box field
     public class Result
     {
         [JsonProperty("faces")]

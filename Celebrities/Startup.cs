@@ -1,3 +1,4 @@
+using Celebrities.Builders;
 using Celebrities.Database;
 using Celebrities.Extensions;
 using Celebrities.ViewModels.Validators;
@@ -22,10 +23,11 @@ namespace Celebrities
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
+
             services.AddControllers()
-                .ConfigureApiBehaviorOptions(o => o.SuppressConsumesConstraintForFormFileParameters = true)
                 .AddFluentValidation(fv =>
-                fv.RegisterValidatorsFromAssemblyContaining<CelebrityValidator>());
+                    fv.RegisterValidatorsFromAssemblyContaining<CelebrityValidator>());
 
             services.AddDbContext<CelebritiesDbContext>(options =>
             {
@@ -35,6 +37,7 @@ namespace Celebrities
 
             services.AddFaceRecognitionServiceClient(Configuration);
 
+            services.AddTransient<CelebrityBuilder, CelebrityBuilder>();
             services.AddSwaggerGen();
         }
 
@@ -49,12 +52,14 @@ namespace Celebrities
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseCors(builder => builder.AllowAnyOrigin());
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            app.UseAuthorization();
 
             app.UseSwagger();
 
