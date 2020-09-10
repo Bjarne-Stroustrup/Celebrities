@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Celebrities.FaceRecognitionService.ResultModels;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ namespace Celebrities.FaceRecognitionService
         private readonly IConfiguration _configuration;
         private readonly ILogger<FaceRecognitionServiceClient> _logger;
         private const string FaceRecognitionConfigSection = "Services:FaceRecognitionService";
-        private const string ContentName = "file";
+        private const string FileContentName = "file";
 
         public FaceRecognitionServiceClient(HttpClient httpClient, IConfiguration configuration,
             ILogger<FaceRecognitionServiceClient> logger)
@@ -26,8 +27,12 @@ namespace Celebrities.FaceRecognitionService
         public async Task<HttpResponseMessage> AddFaceExample(byte[] image, string fileName, string faceName)
         {
             var relativeEndpoint =
-                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}/{faceName}";
-            using var content = new MultipartFormDataContent {{new ByteArrayContent(image), ContentName, fileName}};
+                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}";
+            using var content = new MultipartFormDataContent
+            {
+                {new ByteArrayContent(image), FileContentName, fileName},
+                {new StringContent(faceName), "\"subject\""}
+            };
 
             var response = await _httpClient.PostAsync(relativeEndpoint, content);
             return response;
@@ -37,7 +42,7 @@ namespace Celebrities.FaceRecognitionService
         {
             var relativeEndpoint = _configuration
                 .GetSection($"{FaceRecognitionConfigSection}:RecognizeFacesRelativeEndpoint").Value;
-            using var content = new MultipartFormDataContent {{new ByteArrayContent(image), ContentName, fileName}};
+            using var content = new MultipartFormDataContent {{new ByteArrayContent(image), FileContentName, fileName}};
 
             var response = await _httpClient.PostAsync(relativeEndpoint, content);
             var result = new FacesRecognitionResult();
@@ -56,7 +61,7 @@ namespace Celebrities.FaceRecognitionService
         public async Task<HttpResponseMessage> DeleteFaceExample(string faceName)
         {
             var relativeEndpoint =
-                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}/{faceName}";
+                $"{_configuration.GetSection($"{FaceRecognitionConfigSection}:EditFaceRelativeEndpoint").Value}/?subject={faceName}";
 
             var response = await _httpClient.DeleteAsync(relativeEndpoint);
             return response;

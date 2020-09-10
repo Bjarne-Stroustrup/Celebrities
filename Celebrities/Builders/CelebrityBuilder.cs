@@ -37,7 +37,7 @@ namespace Celebrities.Builders
                     Similarity = a.Similarity,
                     Image = a.AvatarImage
                 });
-            return viewModels;
+            return viewModels.ToList();
         }
     }
 }

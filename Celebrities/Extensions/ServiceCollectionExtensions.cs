@@ -18,7 +18,7 @@ namespace Celebrities.Extensions
                 var modelApiKey = configuration.GetSection($"{faceRecognitionConfigSection}:ModelApiKey").Value;
 
                 cl.BaseAddress = new Uri(baseFaceRecognitionEndpoint);
-                cl.DefaultRequestHeaders.Add("x-frs-api-key", modelApiKey);
+                cl.DefaultRequestHeaders.Add("x-api-key", modelApiKey);
                 cl.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
 
