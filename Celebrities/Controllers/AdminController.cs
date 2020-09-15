@@ -146,5 +146,11 @@ namespace Celebrities.Controllers
 
             return Ok(celebrityViewModel);
         }
+
+        [HttpGet("validation/doesCelebrityNameExist")]
+        public async Task<bool> DoesCelebrityNameExist(string celebrityName)
+        {
+            return await _celebritiesDbContext.Celebrities.AnyAsync(c => c.Name == celebrityName);
+        }
     }
 }
