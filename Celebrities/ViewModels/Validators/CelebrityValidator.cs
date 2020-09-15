@@ -12,8 +12,8 @@ namespace Celebrities.ViewModels.Validators
                 .Must(n => { return !celebritiesDbContext.Celebrities.Any(c => c.Name.Equals(n)); })
                 .WithMessage(c => "The celebrity already exists");
 
-            RuleFor(c => c.Avatar).Cascade(CascadeMode.Stop).NotEmpty().WithMessage("Please upload celebrity image")
-                .SetValidator(new FormFileValidator());
+            //RuleFor(c => c.Avatar).Cascade(CascadeMode.Stop).NotEmpty().WithMessage("Please upload celebrity image")
+            //    .SetValidator(new FormFileValidator());
         }
     }
 }

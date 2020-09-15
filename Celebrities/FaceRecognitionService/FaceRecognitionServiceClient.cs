@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using Celebrities.FaceRecognitionService.ResultModels;
 using Microsoft.Extensions.Configuration;

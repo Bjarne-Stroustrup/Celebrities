@@ -92,7 +92,6 @@ namespace Celebrities.Controllers
             if (!celebrity.Trained)
             {
                 celebrity.Trained = true;
-                _celebritiesDbContext.Celebrities.Update(celebrity);
                 await _celebritiesDbContext.SaveChangesAsync();
             }
 
@@ -122,29 +121,24 @@ namespace Celebrities.Controllers
             return Ok();
         }
 
-        //Don't check this, it doesn't work :) Need to figure out what's wrong and fix
         [HttpPut("id")]
-        public async Task<ActionResult<Celebrity>> EditCelebrity([FromForm]CelebrityViewModel celebrityViewModel, int id)
+        public async Task<ActionResult<Celebrity>> UpdateCelebrity(int id, [FromForm]CelebrityViewModel celebrityViewModel)
         {
             if (celebrityViewModel == null)
             {
                 return BadRequest();
             }
 
-            var celebrity = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == celebrityViewModel.Id);
-            if (celebrity == null)
+            var celebrityDb = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == id);
+            if (celebrityDb == null)
             {
                 return NotFound();
             }
 
-            var celebrityDb = await _celebrityBuilder.BuildDbModelAsync(celebrityViewModel);
-            celebrityDb.FaceRecognitionName = celebrity.FaceRecognitionName;
-            celebrityDb.Trained = celebrity.Trained;
-
-            _celebritiesDbContext.Celebrities.Update(celebrityDb);
+            await _celebrityBuilder.UpdateDbModelAsync(celebrityViewModel, celebrityDb);
             await _celebritiesDbContext.SaveChangesAsync();
 
-            return Ok(celebrityViewModel);
+            return Ok(celebrityDb);
         }
 
         [HttpGet("validation/doesCelebrityNameExist")]

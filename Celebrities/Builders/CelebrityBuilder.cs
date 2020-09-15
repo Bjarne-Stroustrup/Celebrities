@@ -17,12 +17,26 @@ namespace Celebrities.Builders
 
             return new Celebrity
             {
-                Id = celebrityViewModel.Id,
                 Name = celebrityViewModel.Name,
                 Info = celebrityViewModel.Info,
                 ImageName = celebrityViewModel.Avatar.FileName,
                 AvatarImage = memoryStream.ToArray()
             };
+        }
+
+        public async Task UpdateDbModelAsync(CelebrityViewModel celebrityViewModel, Celebrity celebrity)
+        {
+            if (celebrityViewModel.Avatar != null)
+            {
+                await using var memoryStream = new MemoryStream();
+                await celebrityViewModel.Avatar.CopyToAsync(memoryStream);
+
+                celebrity.ImageName = celebrityViewModel.Avatar.FileName;
+                celebrity.AvatarImage = memoryStream.ToArray();
+            }
+
+            celebrity.Name = celebrityViewModel.Name;
+            celebrity.Info = celebrityViewModel.Info;
         }
 
         public IEnumerable<SimilarCelebrityViewModel> BuildSimilarCelebrityViewModels(IEnumerable<Face> faces, IEnumerable<Celebrity> celebritiesDb)
