@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Celebrities.FaceRecognitionService.ResultModels
+namespace Celebrities.FaceRecognitionService.ResultModels.FaceRecognitionResult
 {
-    public class FacesRecognitionResult
+    public class FacesRecognitionResult: BaseResult
     {
-        public bool IsSuccessful { get; set; }
-
         [JsonProperty("result")]
         public IList<Result> Results { get; set; }
     }

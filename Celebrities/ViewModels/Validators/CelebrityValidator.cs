@@ -8,9 +8,19 @@ namespace Celebrities.ViewModels.Validators
     {
         public CelebrityValidator(CelebritiesDbContext celebritiesDbContext)
         {
-            RuleFor(c => c.Name).Cascade(CascadeMode.Stop).NotEmpty().WithMessage("Please specify celebrity name")
-                .Must(n => { return !celebritiesDbContext.Celebrities.Any(c => c.Name.Equals(n)); })
-                .WithMessage(c => "The celebrity already exists");
+            RuleFor(celebrityViewModel => celebrityViewModel).Cascade(CascadeMode.Stop)
+                .Must(celebrityViewModel => celebrityViewModel.Name != null)
+                    .WithMessage("Please specify celebrity name").Must(celebrityViewModel =>
+                    {
+                        if (celebrityViewModel.Id.HasValue)
+                        {
+                            return !celebritiesDbContext.Celebrities.Any(c =>
+                                c.Name.Equals(celebrityViewModel.Name) && c.Id != celebrityViewModel.Id.Value);
+                        }
+
+                        return !celebritiesDbContext.Celebrities.Any(c => c.Name.Equals(celebrityViewModel.Name));
+                    })
+                    .WithMessage(c => "The celebrity already exists");
 
             //RuleFor(c => c.Avatar).Cascade(CascadeMode.Stop).NotEmpty().WithMessage("Please upload celebrity image")
             //    .SetValidator(new FormFileValidator());

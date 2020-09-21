@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Celebrities.FaceRecognitionService.ResultModels
+namespace Celebrities.FaceRecognitionService.ResultModels.SavedImagesResult
 {
-    public class Result
+    public class SavedImagesResult : BaseResult
     {
         [JsonProperty("faces")]
         public IList<Face> Faces { get; set; }

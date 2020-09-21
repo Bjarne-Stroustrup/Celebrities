@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Celebrities.Builders;
 using Celebrities.Database;
@@ -55,8 +57,7 @@ namespace Celebrities.Controllers
         public async Task<ActionResult<Celebrity>> AddCelebrity([FromForm] CelebrityViewModel celebrityViewModel)
         {
             var celebrityDbModel = await _celebrityBuilder.BuildDbModelAsync(celebrityViewModel);
-            celebrityDbModel.FaceRecognitionName = celebrityViewModel.Name;
-            celebrityDbModel.Trained = false;
+            celebrityDbModel.FaceRecognitionName = Guid.NewGuid().ToString();
 
             await _celebritiesDbContext.AddAsync(celebrityDbModel);
             await _celebritiesDbContext.SaveChangesAsync();
@@ -121,7 +122,7 @@ namespace Celebrities.Controllers
             return Ok();
         }
 
-        [HttpPut("id")]
+        [HttpPut("{id}")]
         public async Task<ActionResult<Celebrity>> UpdateCelebrity(int id, [FromForm]CelebrityViewModel celebrityViewModel)
         {
             if (celebrityViewModel == null)
@@ -139,6 +140,28 @@ namespace Celebrities.Controllers
             await _celebritiesDbContext.SaveChangesAsync();
 
             return Ok(celebrityDb);
+        }
+
+
+        [HttpGet("celebrityExampleCount/{id}")]
+        public async Task<ActionResult<int>> GetCelebrityExampleCount(int id)
+        {
+            var celebrityDb = await _celebritiesDbContext.Celebrities.FirstOrDefaultAsync(c => c.Id == id);
+            if (celebrityDb == null)
+            {
+                return NotFound();
+            }
+
+            var savedImagesResponse = await _faceRecognitionServiceClient.GetListOfSavedImages();
+            if (!savedImagesResponse.IsSuccessful)
+            {
+                return BadRequest();
+            }
+
+            var count = savedImagesResponse.Faces.GroupBy(f => f.FaceName).Where(g => g.Key == celebrityDb.FaceRecognitionName)
+                .Select(g => g.Count());
+
+            return Ok(count);
         }
 
         [HttpGet("validation/doesCelebrityNameExist")]

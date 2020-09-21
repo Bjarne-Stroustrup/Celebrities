@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
 
-namespace Celebrities.FaceRecognitionService.ResultModels
+namespace Celebrities.FaceRecognitionService.ResultModels.FaceRecognitionResult
 {
     public class Face
     {
-        [JsonProperty("face_name")]
+        [JsonProperty("subject")]
         public string FaceName { get; set; }
 
         [JsonProperty("similarity")]

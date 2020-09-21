@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Celebrities.Database.Models;
-using Celebrities.FaceRecognitionService.ResultModels;
+using Celebrities.FaceRecognitionService.ResultModels.FaceRecognitionResult;
 using Celebrities.ViewModels;
 
 namespace Celebrities.Builders
