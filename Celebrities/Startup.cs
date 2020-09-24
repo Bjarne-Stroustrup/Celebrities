@@ -29,10 +29,12 @@ namespace Celebrities
                 .AddFluentValidation(fv =>
                     fv.RegisterValidatorsFromAssemblyContaining<CelebrityValidator>());
 
+            services.AddJwtAuthentication(Configuration);
+
             services.AddDbContext<CelebritiesDbContext>(options =>
             {
                 var dbConnectionString = Configuration.GetConnectionString("Celebrities");
-                options.UseSqlServer(dbConnectionString);
+                options.UseSqlServer(dbConnectionString).UseLazyLoadingProxies();
             });
 
             services.AddFaceRecognitionServiceClient(Configuration);
@@ -54,12 +56,13 @@ namespace Celebrities
 
             app.UseCors(builder => builder.AllowAnyOrigin());
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
-
-            app.UseAuthorization();
 
             app.UseSwagger();
 

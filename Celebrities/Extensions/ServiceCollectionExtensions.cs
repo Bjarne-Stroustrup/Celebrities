@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Net.Http.Headers;
+using System.Text;
 using Celebrities.FaceRecognitionService;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Celebrities.Extensions
 {
@@ -21,6 +24,25 @@ namespace Celebrities.Extensions
                 cl.DefaultRequestHeaders.Add("x-api-key", modelApiKey);
                 cl.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    var key = configuration.GetSection("Authentication:Secret").Value;
+                    var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key));
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        IssuerSigningKey = symmetricSecurityKey,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true
+                    };
+                });
 
             return services;
         }

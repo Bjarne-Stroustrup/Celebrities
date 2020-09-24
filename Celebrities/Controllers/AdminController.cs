@@ -8,6 +8,7 @@ using Celebrities.Database;
 using Celebrities.Database.Models;
 using Celebrities.FaceRecognitionService;
 using Celebrities.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Celebrities.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class AdminController : ControllerBase
